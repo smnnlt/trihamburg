@@ -1,0 +1,12 @@
+---
+title: "Descriptive Analysis: Power Profile and Distribution"
+format: 
+  html:
+    self-contained: true
+    toc: true
+output-file: "./output/02-descriptive.html"
+---
+
+Script #02 for the project: "Relationship between tactical decisions and power demands during cycling in a male elite sprint triathlon world championship"
+
+### Setup
