@@ -1,0 +1,172 @@
+---
+title: "Data Import and Cleaning"
+format: 
+  html:
+    self-contained: true
+    toc: true
+output-file: "./output/01-importcleaning.html"
+---
+
+Script #01 for the project: "Relationship between tactical decisions and power demands during cycling in a male elite sprint triathlon world championship"
+
+### Setup
+
+```{r}
+library(purrr)   # functional programming
+library(ggplot2) # visualization
+library(leaflet) # map
+```
+
+### Raw Data Import
+
+```{r}
+d_list <- purrr::map(
+  list.files("../data/powerdata", full.names = TRUE),
+  read.csv
+)
+```
+
+### Identify race data
+
+According to the official course map and pictures from the television broadcast,
+the mount/dismount line is between N53.592699 E10.022551 and N53.592679
+E10.022634. To identify the race section of the files, we search for the
+GPS-data within an area near these points.
+
+#### Merge GPS data to data frame
+
+```{r}
+get_gps <- function(i) {
+  cut <- data.frame(
+    index = seq_len(nrow(d_list[[i]])),
+    lat = d_list[[i]]$lat,
+    lon = d_list[[i]]$lon
+  )
+  cut$athlete <- letters[i]
+  cut
+}
+
+d_gps <- purrr::map_dfr(
+  seq_along(d_list),
+  get_gps
+)
+d_gps$athlete <- as.factor(d_gps$athlete)
+```
+
+#### Visualize GPS data near mount/dismount line
+
+```{r}
+#| warning: false
+
+leaflet::leaflet() |> 
+  leaflet::addTiles() |>
+    leaflet::setView(
+    lng = 10.0225, lat = 53.5925, zoom = 17
+  ) |>
+  leaflet::addPolylines(
+    lng = d_gps$lon, lat = d_gps$lat, weight = 1
+  ) |>
+  leaflet::addPolylines(
+    lng = c(10.022551, 10.022634), lat = c(53.592699, 53.592679), color = "red"
+  ) |>
+  leaflet::addRectangles(
+    lng1 = 10.022551, lng2 = 10.022634, lat1 = 53.592699, lat2 = 53.592679
+  )
+
+# Find minimum distance to mount line
+mount <- c(10.0225925, 53.592689)
+dist <- function(x1, y1, x2 = mount[1], y2 = mount[2]) {
+  sqrt((x1 - x2)^2+(y1 - y2)^2)
+}
+d_gps$dist <- purrr::map2_dbl(d_gps$lon, d_gps$lat, dist)
+for (i in levels(d_gps$athlete)) {
+  gps <- d_gps[d_gps$athlete == i, ]
+  m <- which(gps$dist %in% sort(gps$dist)[1:5])
+  print(m)
+}
+
+# visualize data points
+ggplot(d_gps) +
+  geom_point(aes(x = lon, y = lat, colour = athlete)) +
+  geom_segment( # mount line
+    aes(x = 10.022551, xend = 10.022634, y = 53.592699, yend = 53.592679)
+  ) +
+  geom_text(
+    aes(x = lon, y = lat, colour = athlete, label = index), 
+    size = 1, hjust = -1
+  ) +
+  scale_x_continuous(limits = c(10.0225,10.0229)) +
+  scale_y_continuous(limits = c(53.5925,53.5929))
+```
+
+
+```{r}
+purrr::map(
+  d_list,
+  function(data) {
+  which(data$lat < 53.592709 & data$lat > 53.592669 &
+        data$lon > 10.022509 & data$lon < 10.022750)
+  }
+)
+```
+
+```{r}
+racetimes <- list(
+  c(768, 2247), c(1323, 2803), c(163, 1640), c(1, 1452), c(878, 2352)
+)
+# athlete D: late start and early stop of recording
+bikestart_time <- c(567, 571, 574, 585, 575)
+
+d_sync <- d_list
+for (i in seq_along(d_list)) {
+  d_list[[i]]$index <-  seq_len(nrow(d_list[[i]]))
+  d_sync[[i]] <- d_list[[i]][racetimes[[i]][1]:racetimes[[i]][2], ]
+  d_sync[[i]]$racetime <- seq.int(bikestart_time[i],bikestart_time[i]+nrow(d_sync[[i]])-1)
+}
+```
+
+### Check race data
+
+```{r}
+# Plot power data for each individual
+
+plot_power <- function(i) {
+  d <- d_sync[[i]]
+  ggplot(d, aes(x = racetime, y = power)) +
+    geom_line()
+  
+  ggsave(
+    paste0("../plots/temp/fullrace/", letters[i], ".png"),
+    dpi = 600,
+    width = 7, height = 4
+  )
+}
+
+purrr::walk(seq_along(d_sync), plot_power)
+```
+
+For athlete C the power meter did not work in the first minutes. I will set this null-data to `NA`:
+
+```{r}
+firstpower <- min(which(d_sync[[3]]$power != 0))
+d_sync[[3]]$power[1:(firstpower - 1)] <- NA
+```
+
+### Combine data from all athletes
+
+```{r}
+combine_data <- function(i) {
+  d <- d_sync[[i]]
+  d$athlete <- letters[i]
+  d
+}
+
+d_comb <- purrr::map_dfr(seq_along(d_sync), combine_data)
+cols <- colnames(d_comb) %in% c("racetime", "athlete", "power", "lat", "lon", "distance", "time", "index", "km", "kph", "grade", "cadence")
+d <- d_comb[order(d_comb$racetime), cols]
+row.names(d) <- NULL
+d
+
+write.csv(d, "../data/temp/cleaned-combined.csv", row.names = FALSE)
+```
+
