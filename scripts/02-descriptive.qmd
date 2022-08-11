@@ -10,3 +10,72 @@ output-file: "./output/02-descriptive.html"
 Script #02 for the project: "Relationship between tactical decisions and power demands during cycling in a male elite sprint triathlon world championship"
 
 ### Setup
+
+```{r}
+library(purrr)   # Functional programming
+library(ggplot2) # Visualization
+```
+
+### Load data
+
+```{r}
+d <- read.csv("../data/temp/cleaned-combined.csv")
+d$athlete <- as.factor(d$athlete)
+```
+
+### Power Profile
+
+#### Calculation
+
+```{r}
+maxeffort <- function(t, x) {
+  # create a moving average over length t
+  series <- stats::filter(x, rep(1 / t, t), sides = 2) 
+  # find maximum
+  m <- max(as.vector(series), na.rm = TRUE)
+  data.frame(
+    time = t,
+    power = m
+  )
+}
+
+maxeffort_all <- function(athlete, range = 1:1210, data = d) {
+  powerdata <- data$power[data$athlete == athlete]
+  df <- purrr::map_dfr(range, maxeffort, x = powerdata)
+  df$athlete <- athlete
+  df
+}
+
+pp <- purrr::map_dfr(levels(d$athlete), maxeffort_all)
+
+```
+
+#### Visualization
+
+```{r}
+ggplot(pp, aes(x = time, y = power, colour = athlete)) +
+  geom_line() +
+  scale_x_log10(
+    breaks = c(5, 10, 30, 60, 120, 300, 600, 1200),
+    minor_breaks = FALSE
+  ) + 
+  scale_y_continuous(
+    breaks = seq(300, 1100, 200),
+    limits = c(290, 1110)
+  ) +
+  theme_minimal()
+```
+
+### Power Distribution
+
+```{r}
+ggplot(d, aes(x = power, colour = athlete)) +
+  geom_density()
+```
+
+### Descriptive Data
+
+```{r}
+
+```
+
