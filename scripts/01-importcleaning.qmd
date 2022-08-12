@@ -47,7 +47,7 @@ get_gps <- function(i) {
     lat = d_list[[i]]$lat,
     lon = d_list[[i]]$lon
   )
-  cut$athlete <- letters[i] # set athlete id 
+  cut$athlete <- LETTERS[i] # set athlete id 
   cut
 }
 
@@ -187,7 +187,7 @@ d_sync[[3]]$power[1:(firstpower - 1)] <- NA
 # turn data into tidy format (merging athletes' data)
 combine_data <- function(i) {
   d <- d_sync[[i]]
-  d$athlete <- letters[i]
+  d$athlete <- LETTERS[i]
   d
 }
 d_comb <- purrr::map_dfr(seq_along(d_sync), combine_data)
