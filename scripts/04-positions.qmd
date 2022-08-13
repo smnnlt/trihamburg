@@ -1,0 +1,132 @@
+---
+title: "Positions"
+format: 
+  html:
+    self-contained: true
+    toc: true
+output-file: "./output/04-positions.html"
+---
+
+Script #04 for the project: "Relationship between tactical decisions and power demands during cycling in a male elite sprint triathlon world championship"
+
+### Setup
+
+```{r}
+#| warning: false
+
+library(tidyr)   # Data wrangling
+library(ggplot2) # Visualization
+library(ggbump)  # Visualization
+library(dplyr)   # For internal {ggbump} functions
+
+# set Okabe-Ito palette as colour scheme
+cls <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7", "#999999") 
+```
+
+
+### Read data
+
+```{r}
+# read turns data
+turndata <- read.csv("../data/temp/turndata.csv")
+
+# read position data
+posdata <- read.csv("../data/positions.csv")
+posdata
+```
+
+### Wrangle and merge position and power output data
+
+```{r}
+# turn position data into tidy format
+posdata_long <- tidyr::pivot_longer(posdata, 
+  cols = pos_A:pos_H, 
+  values_to = "position", 
+  names_to = "athlete", 
+  names_prefix = "pos_"
+)
+
+d <- merge(turndata, posdata_long)
+
+# write data to create an intermediate data file that can be used in next 
+# analysis scripts
+write.csv(d, "../data/temp/turnpositions.csv", row.names = FALSE)
+```
+
+### Visualize positions
+
+```{r}
+#| warning: false
+
+# coordinates for x-axis lap lines
+laplines <- data.frame(
+  x1 = c(0.5, 4.5, 12.5, 20.5), 
+  x2 = c(24.5, 8.5, 16.5, 24.5), 
+  y1 = rep.int(0.7, 4), 
+  y2 = rep.int(0.7, 4)
+)
+
+ggplot(posdata_long, aes(x = turnid, y = position, colour = athlete)) +
+  geom_bump() +
+  geom_point() +
+  geom_text( # direct labelling
+    data = posdata_long[posdata_long$turnid == 24, ],
+    aes(
+      x = 24.7,
+      y = position,
+      colour = athlete,
+      label = athlete
+    )
+  ) +
+  geom_segment(
+    aes(x = x1, xend = x2, y = y1, yend = y2), 
+    data =laplines[1, ],
+    colour = "grey70"
+  ) +
+  geom_segment(
+    aes(x = x1, xend = x2, y = y1, yend = y2), 
+    data = laplines[2, ],
+    colour = "grey85"
+  ) +
+  geom_segment(
+    aes(x = x1, xend = x2, y = y1, yend = y2), 
+    data = laplines[3, ],
+    colour = "grey85"
+  ) +
+    geom_segment(
+    aes(x = x1, xend = x2, y = y1, yend = y2), 
+    data = laplines[4, ],
+    colour = "grey85"
+  ) +
+  scale_color_manual(
+    name = "Athlete",
+    values = cls
+  ) +
+  scale_x_continuous(
+    name = "Lap",
+    limits = c(0.3,25.0),
+    breaks = seq(2.5, 22.5, 4),
+    labels = seq(1,6),
+    minor_breaks = seq(4.5, 20.5, 4),
+    expand = c(0,0)
+  ) +
+  scale_y_continuous(
+    name = "Position",
+    breaks = c(1,3,5,7),
+    minor_breaks = seq(2,9,2),
+    expand = c(0,0.1)
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "none",
+    panel.grid.major.x = element_blank()
+  )
+
+ggsave(
+  "../plots/positions.png", 
+  width = 6, height = 4, 
+  dpi = 600, 
+  bg = "white"
+)
+```
+
