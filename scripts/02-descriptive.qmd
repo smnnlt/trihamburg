@@ -17,6 +17,9 @@ Script #02 for the project: "Relationship between tactical decisions and power d
 library(purrr)   # Functional programming
 library(ggplot2) # Visualization
 library(dplyr)   # Data wrangling
+
+# set Okabe-Ito palette as colour scheme
+cls <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7", "#999999") 
 ```
 
 ### Load data
@@ -59,24 +62,63 @@ pp <- purrr::map_dfr(levels(d$athlete), maxeffort_all)
 ggplot(pp, aes(x = time, y = power, colour = athlete)) +
   geom_line() +
   scale_x_log10(
+    name = "Time (s)",
     breaks = c(1, 5, 10, 30, 60, 120, 300, 600, 1200),
     minor_breaks = FALSE
   ) + 
   scale_y_continuous(
+    name = "Power (W)",
     breaks = seq(300, 1100, 200),
     limits = c(290, 1110)
+  ) +
+  scale_color_manual(
+    name = "Athlete",
+    values = cls
   ) +
   theme_minimal() +
   theme(
     legend.position = c(0.7, 0.7)
   )
+
+ggsave(
+  "../plots/powerprofile.png", 
+  width = 6, height = 4, 
+  dpi = 600, 
+  bg = "white"
+)
 ```
 
 ### Power Distribution
 
 ```{r}
 ggplot(d, aes(x = power, colour = athlete)) +
-  geom_density()
+  geom_density() +
+  scale_x_continuous(
+    name = "Power (W)",
+    breaks = c(0, seq(300, 1100, 200)),
+    minor_breaks = c(100, seq(200, 1000, 200)),
+    limits = c(0, 1120)
+  ) +
+  scale_y_continuous(
+    name = "Density",
+    breaks = 0,
+    labels = NULL
+  ) +
+  scale_color_manual(
+    name = "Athlete",
+    values = cls
+  ) +
+  theme_minimal() +
+    theme(
+    legend.position = c(0.7, 0.7)
+  )
+
+ggsave(
+  "../plots/powerdistribution.png", 
+  width = 6, height = 4, 
+  dpi = 600, 
+  bg = "white"
+)
 ```
 
 ### Descriptive Data
