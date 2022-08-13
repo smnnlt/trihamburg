@@ -1,0 +1,137 @@
+---
+title: "Turns"
+format: 
+  html:
+    self-contained: true
+    toc: true
+output-file: "./output/03-turns.html"
+---
+
+Script #03 for the project: "Relationship between tactical decisions and power demands during cycling in a male elite sprint triathlon world championship"
+
+### Setup
+
+```{r}
+library(purrr)   # Functional programming
+library(ggplot2) # Visualization
+```
+
+
+### Read data
+
+```{r}
+d <- read.csv("../data/temp/cleaned-combined.csv")
+d$athlete <- as.factor(d$athlete)
+```
+
+### Identify turns
+
+```{r}
+# create data.frame with additional data on turns
+turns <- data.frame(
+  racetime = c(634,724,763,801,871,965,1005,1044,1115,1204,1243,1282,1355,1443,1485,1524,1592,1681,1723,1761,1831,1921,1961,1999),
+  type = factor(rep.int(c("u","c"),12)),
+  id = seq.int(to = 24),
+  turn_id = rep.int(1:4,6),
+  lap = rep(1:6, each = 4)
+)
+turns
+```
+
+### Plot turns
+
+```{r}
+#| warning: false
+
+# function to create a plot for the power data around a given race time
+plot_turn <- function(time) {
+  sprintarea <- data.frame(xmin = time, xmax = time+10, ymin = 0, ymax = 1000)
+  p <- ggplot(d, aes(x = racetime, y = power, colour = athlete)) +
+    geom_point(size = 2) +
+    geom_line() +
+    geom_rect(
+      inherit.aes = FALSE, 
+      data = sprintarea, 
+      aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax), 
+      alpha = 0.1) +
+    scale_x_continuous(limits = c(time-10, time+20)) +
+    theme_minimal()
+  ggsave(
+    filename = paste0("../plots/temp/turns/",time,".png"), 
+    plot = p,
+    dpi = 300, 
+    width = 8, 
+    height = 5,
+    bg = "white")
+}
+
+# generate plots for each turn
+purrr::walk(turns$racetime, plot_turn)
+```
+
+### Identify acceleration and PPO/MPO values
+
+Each athlete might start their acceleration after the turn at a slightly different time (e.g. depending on their position in the group). I account for these time shifts by investigating each acceleration based on an individual start point. According to the preregistration, the start point is defined as the first increment in power greater than 100 W after a turn.
+
+```{r}
+# function for identifying start point of an acceleration
+get_accstart <- function(time, data) {
+  if (is.na(data$power[data$racetime == time])) { 
+    return(NA) # no power data available
+  } else {
+    d_cut <- data[(data$racetime >= (time)) & (data$racetime < time + 10), ]
+    firstrise <- min(which(diff(d_cut$power) > 100))
+    d_cut$racetime[firstrise] + 1
+  }
+}
+
+get_po <- function(time, data, type = "ppo", duration = 10) {
+  # use only data before time point for negative durations
+  if (duration > 0) {
+    pwrs <- data$power[(data$racetime >= time) & (data$racetime < time + duration)]
+  } else if (duration < 0) {
+    pwrs <- data$power[(data$racetime < time) & (data$racetime >= time + duration)]
+  } else {
+    stop("Zero is no valid duration")
+  }
+  
+  if (type == "ppo") {
+    max(pwrs)
+  } else if (type == "mpo") {
+    mean(pwrs)
+  } else {
+    stop("No valid 'type' argument")
+  }
+}
+
+```
+
+```{r}
+get_allpo <- function(athlete, data, times) {
+  d_cut <- data[data$athlete == athlete, ]
+  
+  accs <- purrr::map_dbl(times, get_accstart, data = d_cut)
+  
+  data.frame(
+    turnid = seq_along(times),
+    athlete = rep.int(athlete, length(times)),
+    ppo = purrr::map_dbl(accs, get_po, data = d_cut, type = "ppo", duration = 10),
+    mpo10 = purrr::map_dbl(accs, get_po, data = d_cut, type = "mpo", duration = 10),
+    mpo20 = purrr::map_dbl(accs, get_po, data = d_cut, type = "mpo", duration = 20),
+    mpo20n = purrr::map_dbl(accs, get_po, data = d_cut, type = "mpo", duration = -20)
+  )
+  
+}
+
+po_data <- purrr::map_dfr(
+  levels(d$athlete),
+  get_allpo,
+  data = d,
+  times = turns$racetime
+)
+
+# write data to create an intermediate data file that can be used in next 
+# analysis scripts
+write.csv(po_data, "../data/temp/turndata.csv", row.names = FALSE)
+```
+
