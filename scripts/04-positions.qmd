@@ -76,7 +76,8 @@ ggplot(posdata_long, aes(x = turnid, y = position, colour = athlete)) +
       y = position,
       colour = athlete,
       label = athlete
-    )
+    ),
+    nudge_y = 0.03
   ) +
   geom_segment(
     aes(x = x1, xend = x2, y = y1, yend = y2), 
@@ -112,14 +113,16 @@ ggplot(posdata_long, aes(x = turnid, y = position, colour = athlete)) +
   ) +
   scale_y_continuous(
     name = "Position",
-    breaks = c(1,3,5,7),
-    minor_breaks = seq(2,9,2),
-    expand = c(0,0.1)
+    breaks = seq(1,9,2),
+    limits = c(0.68, 11),
+    expand = expansion(c(0,0.01))
   ) +
-  theme_minimal() +
+  theme_classic() +
   theme(
     legend.position = "none",
-    panel.grid.major.x = element_blank()
+    panel.grid.minor.x = element_line(colour = "grey80", size = 0.1),
+    axis.line.x = element_blank(),
+    axis.ticks.x = element_blank()
   )
 
 ggsave(

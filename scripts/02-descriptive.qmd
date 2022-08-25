@@ -14,9 +14,10 @@ Script #02 for the project: "Relationship between tactical decisions and power d
 ```{r}
 #| warning: false
 
-library(purrr)   # Functional programming
-library(ggplot2) # Visualization
-library(dplyr)   # Data wrangling
+library(purrr)     # Functional programming
+library(ggplot2)   # Visualization
+library(dplyr)     # Data wrangling
+library(patchwork) # Visualization
 
 # set Okabe-Ito palette as colour scheme
 cls <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7", "#999999") 
@@ -59,8 +60,8 @@ pp <- purrr::map_dfr(levels(d$athlete), maxeffort_all)
 #### Visualization
 
 ```{r}
-ggplot(pp, aes(x = time, y = power, colour = athlete)) +
-  geom_line() +
+pp_plot <- ggplot(pp, aes(x = time, y = power, colour = athlete)) +
+  geom_line(size = 0.7) +
   scale_x_log10(
     name = "Time (s)",
     breaks = c(1, 5, 10, 30, 60, 120, 300, 600, 1200),
@@ -75,51 +76,56 @@ ggplot(pp, aes(x = time, y = power, colour = athlete)) +
     name = "Athlete",
     values = cls
   ) +
-  theme_minimal() +
+  theme_classic() +
   theme(
-    legend.position = c(0.7, 0.7)
+    legend.position = "bottom",
+    panel.grid.major = element_line(colour = "grey80", size = 0.1)
   )
-
-ggsave(
-  "../plots/powerprofile.png", 
-  width = 6, height = 4, 
-  dpi = 600, 
-  bg = "white"
-)
+pp_plot
 ```
 
 ### Power Distribution
 
 ```{r}
-ggplot(d, aes(x = power, colour = athlete)) +
-  geom_density() +
+pd_plot <- ggplot(d, aes(x = power, colour = athlete)) +
+  geom_density(size = 0.7, show.legend = FALSE) +
   scale_x_continuous(
     name = "Power (W)",
-    breaks = c(0, seq(300, 1100, 200)),
-    minor_breaks = c(100, seq(200, 1000, 200)),
-    limits = c(0, 1120)
+    breaks = c(0, seq(100, 1100, 200)),
+    limits = c(0, 1120),
+    expand = c(0,0)
   ) +
   scale_y_continuous(
     name = "Density",
-    breaks = 0,
-    labels = NULL
+    breaks = NULL,
+    expand = expansion(c(0,0.03))
   ) +
   scale_color_manual(
     name = "Athlete",
     values = cls
   ) +
-  theme_minimal() +
-    theme(
-    legend.position = c(0.7, 0.7)
+  theme_classic() +
+  theme(
+    panel.grid.major = element_line(colour = "grey80", size = 0.1)
   )
 
-ggsave(
-  "../plots/powerdistribution.png", 
-  width = 6, height = 4, 
-  dpi = 600, 
-  bg = "white"
-)
+pd_plot
 ```
+
+### Combine Power Profile & Distribution Plot
+
+```{r}
+(pp_plot | pd_plot) / guide_area() +
+  plot_layout(guides = "collect", heights = c(9,1)) +
+  patchwork::plot_annotation(tag_levels = "A") & 
+  theme(
+    plot.tag.position = c(0, 1),
+    plot.tag = element_text(size = 10, hjust = 0, vjust = 1, face = "bold")
+  )
+
+ggsave("../plots/power.png", dpi = 600, width = 7, height = 3)
+```
+
 
 ### Descriptive Data
 
