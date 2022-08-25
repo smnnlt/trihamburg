@@ -1,0 +1,347 @@
+---
+title: "Bayesian Analysis"
+format: 
+  html:
+    self-contained: true
+    toc: true
+    html-math-method: katex
+output-file: "./output/05-bayesian.html"
+---
+
+### Setup
+
+```{r}
+#| warning: false
+
+library(rstanarm)    # Bayesian Modelling (requires a Stan distribution)
+library(bayesplot)   # Model Diagnostics
+library(broom.mixed) # Model Summary
+library(purrr)       # Functional Programming
+library(ggplot2)     # Visualization
+library(patchwork)   # Visualization
+
+# set Okabe-Ito palette as colour scheme
+cls <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7", "#999999") 
+```
+### Import Data
+
+```{r}
+d <- read.csv("../data/temp/turnpositions.csv")
+```
+
+### Custom Functions
+
+#### Model summary and MCMC diagnostics
+
+```{r}
+mcmc_sum_diagn <- function(mod, with_plots = TRUE) {
+  neff <- bayesplot::neff_ratio(mod)
+  rhat <- bayesplot::rhat(mod)
+  effect <- broom.mixed::tidy(
+    mod, 
+    effects = c("fixed","aux"), 
+    conf.int = TRUE, conf.level = 0.95
+  )
+  if (with_plots) {
+    trace <- bayesplot::mcmc_trace(mod)
+    trank <- bayesplot::mcmc_rank_overlay(mod)
+    dens <- bayesplot::mcmc_dens_overlay(mod)
+  
+    ggsave(
+      paste0("../plots/temp/mcmc/", mod$formula[[2]], "/trace.png"),
+      plot = trace,
+      width = 10, height = 8, dpi = 600, bg = "white"
+    )
+    ggsave(
+      paste0("../plots/temp/mcmc/", mod$formula[[2]], "/trank.png"),
+      plot = trank,
+      width = 10, height = 8, dpi = 600, bg = "white"
+    )
+    ggsave(
+      paste0("../plots/temp/mcmc/", mod$formula[[2]], "/dens.png"),
+      plot = dens,
+      width = 10, height = 8, dpi = 600, bg = "white"
+    )
+  }
+  list(n_eff = neff, Rhat = rhat, eff = effect)
+}
+```
+
+#### Function for extracting posterior mean predictions 
+
+```{r}
+# Function to get prediction for mu (mean and CIs for a given group and x value)
+get_mu.internal <- function(x, athlete, model) {
+  data <- as.data.frame(model)
+  if (athlete == "all") {
+    indiv_intercept <- rep.int(0, nrow(data))
+    indiv_slope <- rep.int(0, nrow(data))
+  } else {
+    indiv_intercept <- data[, paste0("b[(Intercept) athlete:", athlete, "]")]
+    indiv_slope <- data[, paste0("b[position athlete:", athlete, "]")]
+  }
+  intercept <- data$`(Intercept)` +  indiv_intercept
+  slope <- data$position + indiv_slope
+  mu <- intercept + slope * x
+  ci_50_95 <- quantile(mu, probs = c(0.05, 0.25, 0.75, 0.95), names = FALSE)
+  data.frame(
+    position = x,
+    athlete = athlete,
+    mean = mean(mu),
+    ci_95_low = ci_50_95[1],
+    ci_95_high = ci_50_95[4],
+    ci_50_low = ci_50_95[2],
+    ci_50_high = ci_50_95[3]
+  )
+}
+
+# Function to get all mu predictions for all groups and all x values
+# set 'athlete = "all"' to get overall predictions
+get_mu <- function(model, athlete = LETTERS[1:5]) {
+  purrr::map_dfr(
+    .x = athlete,
+    .f = function (i) {
+      purrr::map_dfr(
+        .x = 1:8,
+        .f = get_mu.internal,
+        athlete = i,
+        model = model
+      )
+    }
+  )
+}
+```
+
+#### Function to create scatter plots with (individual) mean predictions 
+
+```{r}
+pred_scatter_plot <- function(var, all_data, indiv_data, show_x_label = TRUE) {
+  ggplot(d) +
+    geom_jitter(
+      aes(x = position, y = .data[[var]], colour = athlete), 
+      height = 0, width = 0.15, 
+    ) +
+    # geom_ribbon( # Individual confidence bands
+    #   data = indiv_data, 
+    #   aes(
+    #     x = position, 
+    #     ymin = ci_95_low, 
+    #     ymax = ci_95_high, 
+    #     group = athlete, 
+    #     fill = athlete
+    #   ), 
+    #   alpha = 0.1
+    # ) +
+    geom_line( # Individual mean predictions
+      data = indiv_data, 
+      aes(x = position, y = mean, group = athlete, colour = athlete), 
+      linetype = 2,
+    ) +
+    geom_ribbon( # Overall confidence bands
+      data = all_data, 
+      aes(
+        x = position, 
+        ymin = ci_95_low, 
+        ymax = ci_95_high, 
+      ), 
+      fill = "black",
+      alpha = 0.1
+    ) +
+    geom_line( # Overall mean predictions
+      data = all_data, 
+      aes(x = position, y = mean)
+    ) +
+    scale_x_continuous(
+      if (show_x_label) name = "Position" else name = NULL,
+      limits = c(1,8),
+      breaks = seq(1,7,2)
+    ) +
+    # scale_y_continuous(
+    #   name = "Power (W)",
+    #   limits = c(80, 1080)
+    # ) +
+    scale_color_manual(
+      name = "Athlete",
+      values = cls
+    ) +
+    labs(
+      title = switch (var,
+        ppo = "PPO",
+        mpo10 = "MPO 10s",
+        mpo20 = "MPO 20s",
+        mpo20n = "MPO 20s prior",
+        stop("Unknown 'var' argument.")
+      )
+    ) +
+    theme_classic() +
+    theme(
+      legend.position = "bottom",
+      panel.grid.major.y = element_line(colour = "grey80", size = 0.1)
+    )
+}
+```
+
+### Models
+
+#### Model I: PPO
+
+```{r}
+#| eval: false
+
+# ppo_mod <- rstanarm::stan_glmer(
+#   ppo ~ position + (position|athlete),
+#   data = d, family = "gaussian",
+#   prior_intercept = normal(700, 100),
+#   prior = normal(0, 50),
+#   prior_covariance = decov(reg = 2, conc = 1, shape = 1, scale = 1),
+#   prior_aux = exponential(10),
+#   chains = 4, iter = 5000*2, seed = 4711, adapt_delta = 0.999
+# )
+# 2 divergent transitions
+
+# save(ppo_mod, file = "../data/models/ppo_mod.Rda")
+```
+
+#### Model II: MPO 10s
+
+```{r}
+#| eval: false
+
+# mpo10_mod <- rstanarm::stan_glmer(
+#   mpo10 ~ position + (position|athlete),
+#   data = d, family = "gaussian",
+#   prior_intercept = normal(550, 100),
+#   prior = normal(0, 50),
+#   prior_covariance = decov(reg = 2, conc = 1, shape = 1, scale = 1),
+#   prior_aux = exponential(10),
+#   chains = 4, iter = 5000*2, seed = 4711, adapt_delta = 0.999
+# )
+# 2 divergent transitions
+
+# save(mpo10_mod, file = "../data/models/mpo10_mod.Rda")
+```
+
+#### Model III: MPO 20s
+
+```{r}
+#| eval: false
+
+# mpo20_mod <- rstanarm::stan_glmer(
+#   mpo20 ~ position + (position|athlete),
+#   data = d, family = "gaussian",
+#   prior_intercept = normal(500, 100),
+#   prior = normal(0, 50),
+#   prior_covariance = decov(reg = 2, conc = 1, shape = 1, scale = 1),
+#   prior_aux = exponential(10),
+#   chains = 4, iter = 5000*2, seed = 4711, adapt_delta = 0.999
+# )
+# no divergent transitions
+
+# save(mpo20_mod, file = "../data/models/mpo20_mod.Rda")
+```
+
+#### Model IV: MPO 20s prior
+
+```{r}
+#| eval: false
+
+# mpo20n_mod <- rstanarm::stan_glmer(
+#   mpo20n ~ position + (position|athlete),
+#   data = d, family = "gaussian",
+#   prior_intercept = normal(400, 150),
+#   prior = normal(0, 50),
+#   prior_covariance = decov(reg = 2, conc = 1, shape = 1, scale = 1),
+#   prior_aux = exponential(15),
+#   chains = 4, iter = 5000*2, seed = 4711, adapt_delta = 0.999
+# )
+# no divergent transitions
+
+# save(mpo20n_mod, file = "../data/models/mpo20n_mod.Rda")
+```
+
+### Load models
+
+```{r}
+load("../data/models/ppo_mod.Rda")
+load("../data/models/mpo10_mod.Rda")
+load("../data/models/mpo20_mod.Rda")
+load("../data/models/mpo20n_mod.Rda")
+```
+
+### Model summaries and MCMC diagnostics
+
+```{r}
+# Run with `with_plots = TRUE` to reproduce MCMC diagnostic plots
+mcmc_sum_diagn(ppo_mod, with_plots = FALSE)
+mcmc_sum_diagn(mpo10_mod, with_plots = FALSE)
+mcmc_sum_diagn(mpo20_mod, with_plots = FALSE)
+mcmc_sum_diagn(mpo20n_mod, with_plots = FALSE)
+```
+
+### Posterior mean predictions
+
+```{r}
+ppo_mu_indiv <- get_mu(ppo_mod)
+ppo_mu <- get_mu(ppo_mod, athlete = "all")
+
+mpo10_mu_indiv <- get_mu(mpo10_mod)
+mpo10_mu <- get_mu(mpo10_mod, athlete = "all")
+
+mpo20_mu_indiv <- get_mu(mpo20_mod)
+mpo20_mu <- get_mu(mpo20_mod, athlete = "all")
+
+mpo20n_mu_indiv <- get_mu(mpo20n_mod)
+mpo20n_mu <- get_mu(mpo20n_mod, athlete = "all")
+```
+
+
+### Visualizations
+
+```{r}
+# Scatter plots for variables with mean predictions
+
+p1 <- pred_scatter_plot("ppo", ppo_mu, ppo_mu_indiv, show_x_label = FALSE) +
+  scale_y_continuous(name = "Power (W)", limits = c(440, 1080))
+p2 <- pred_scatter_plot("mpo10", mpo10_mu, mpo10_mu_indiv, show_x_label = FALSE) +
+  scale_y_continuous(name = NULL, limits = c(440, 1080))
+p3 <- pred_scatter_plot("mpo20", mpo20_mu, mpo20_mu_indiv) +
+  scale_y_continuous(name = "Power (W)", limits = c(80, 700))
+p4 <- pred_scatter_plot("mpo20n", mpo20n_mu, mpo20n_mu_indiv) +
+  scale_y_continuous(name = NULL, limits = c(80, 700)) +
+  theme(
+    plot.margin = unit(c(0,0,0,10), "pt")
+  )
+
+p1; p2; p3; p4
+
+(p1 | p2) / (p3 | p4) / guide_area() +
+  patchwork::plot_layout(guides = "collect", heights = c(5,5,1)) +
+  patchwork::plot_annotation(tag_levels = "A") &
+  theme(
+    plot.tag.position = c(0, 1),
+    plot.tag = element_text(size = 10, hjust = 0, vjust = 1, face = "bold")
+  )
+
+ggsave("../plots/turnpower.png", dpi = 600, width = 7, height = 5)
+```
+
+
+### Appendix: Model Formula
+
+Example formula for the PPO model:
+
+$$
+\begin{align*}
+PPO_i &\sim \textrm{Normal}(\mu_i, \sigma) \\ 
+\mu_i &= \alpha_{athlete[i]} + \beta_{athlete[i]} position_i \\
+\binom{\alpha_{athlete}}{\beta_{athlete}} &\sim \textrm{MVNormal}(\binom{\alpha}{\beta}, \Sigma) \\
+\Sigma &= \begin{pmatrix} \sigma_{\alpha} & 0 \\ 0 & \sigma_{\beta} \\ \end{pmatrix} R \begin{pmatrix} \sigma_{\alpha} & 0 \\ 0 & \sigma_{\beta} \\ \end{pmatrix} \\
+\binom{\sigma_{\alpha}}{\sigma_{\beta}} &= \tau\sqrt{\pi}\\
+\alpha &\sim \textrm{Normal}(700, 100) \\
+\beta &\sim \textrm{Normal}(0, 50) \\
+\sigma &\sim \textrm{Exp}(10) \\
+R &\sim \textrm{LKJ}(2) \\
+\tau &\sim \textrm{Exp}(1) \\
+\pi &\sim \textrm{Dirichlet}(2,1)
+\end{align*}
+$$
