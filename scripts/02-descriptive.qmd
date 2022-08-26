@@ -137,6 +137,12 @@ mean_nonzero <- function(data, na.rm = TRUE) {
   mean(data[data != 0], na.rm = na.rm)
 }
 
+# function for calculating normalized power
+np <- function(data) {
+  d_smooth <- stats::filter(data, rep(1 / 30, 30), sides = 1)
+  mean(as.vector(d_smooth)^4, na.rm = TRUE)^(1/4)
+}
+
 # function for calculating time above a certain value
 t_over <- function(data, value, na.rm = TRUE) {
   sum(data > value, na.rm = na.rm)
@@ -166,17 +172,22 @@ count_peaks <- function(data, value) {
 
 ```{r}
 # summarise descriptive power data for each athlete
-d |>
+tab1 <- d |>
   dplyr::group_by(athlete) |>
   dplyr::summarise(
     mean = mean(power, na.rm = TRUE),
     mean_non0 = mean_nonzero(power, na.rm = TRUE),
     sd = sd(power, na.rm = TRUE),
+    np = np(power),
     max = max(power, na.rm = TRUE),
     t500 = t_over(power, 500, na.rm = TRUE),
     t700 = t_over(power, 700, na.rm = TRUE),
     n500 = count_peaks(power, 500),
     n700 = count_peaks(power, 700)
   )
+
+save(tab1, file = "../data/temp/table1.Rda")
+
+tab1
 ```
 
