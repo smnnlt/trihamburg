@@ -1,0 +1,168 @@
+---
+articletitle: |
+  Relationship between positioning and power demands during cycling in a male elite sprint triathlon world championship
+# shorttitle: "Doe et al. (2022)" # usually auto-generated
+format: sportrxiv-pdf
+author:
+  - name: Simon Nolte
+    affiliations:
+      - ref: 1
+    orcid: 0000-0003-1643-1860
+    corresponding: true
+    email: s.nolte@dshs-koeln.de
+  - name: Oliver Jan Quittmann
+    orcid: 0000-0002-6116-6747
+    affiliations:
+      - ref: 1
+affiliations:
+      - id: 1
+        name: |
+          Institute of Movement and Neurosciences, German Sport University Cologne
+abstract: |
+  *Purpose*: To compare the power output of different elite athletes in the same bike group and investigate its relationship with positioning at turns. \newline\
+  *Methods*: We analyzed power and position (video) data from 5 out of 8 riders of the front group for the 2020 elite men sprint triathlon world championship. We created power profiles and distributions and investigated the influence of position on power output with Bayesian hierarchical models. \newline\
+  *Results*: Athletes of the same bike group experienced different power demands and employed different positioning strategies. With  each position further behind during a turn, athletes had a higher peak (+24.2W [4.8 36.7]; mean [95% credibility interval]) and 10 seconds mean power during the following acceleration (+19.3W [10.5; 27.1]). The positioning had a smaller effect on 20 seconds mean power (+6.3W [-1.4; 13.6]) and a negative effect on the 20 seconds mean power prior to the turn (-13.4W [-20.8; -4.99]).  \newline\
+  *Conclusion*: Positioning during cycling can influence the variability of power output, which may ultimately affect subsequent running performance. Athletes and their coaches should identify positioning strategies that fit their individual abilities best.
+license-type: ccby # change if neccessary
+# year: 2025 # defaults to current year
+keywords: [cycling; sport performance; pacing; physiology; race strategies] # optional
+# optional link to Supplementary Material:
+suppl-link: https://github.com/smnnlt/trihamburg
+reference-section-title: References
+printnote: "PREPRINT - NOT PEER REVIEWED" # if post print, include "POSTPRINT" then link to the published article
+bibliography: bibliography.bib  
+pdf-engine: xelatex
+---
+
+# Introduction
+
+Cycling in short and sprint distance triathlon is characterized by the permission of drafting [@bentley2002]. Typically, athletes compete the bike distance in groups to save energy and reduce the distance to the athletes in the front for the following run. Acceleration, attacks and turns lead to a highly variable power output during cycling in short distance triathlon [@bernard2009; @etxebarria2014].
+
+The relevance of cycling to the overall triathlon performance is up to debate. Studies usually correlate cycling and overall performance using split times or split rankings [@figueiredo2016; @gadelha2020; @ofoghi2016; @olaya2021; @sousa2021; @vleck2006]. Results range from cycling being the most important segment for predicting overall race performance [@olaya2021] to cycling being considered more a "smooth transition towards running" [@piacentini2019]. However, the group-riding character of draft legal races will bias every correlation analyses of bike segment split times or positions. Moreover, even athletes with identical bike split times may experience different physiological demands and will start the run segment with different levels of fatigue.
+
+Drafting is a main factor to reduce the physiological demands during cycling [@bentley2002]. Riding behind other athletes reduces the power output, which saves energy and can ultimately lead to an improved running performance [@hausswirth1999; @hausswirth2001]. In general, the drafting effect increases for an individual with an increasing number of riders in front of them. But riding in the back of a bike group also has its drawbacks: During attacks or turns, athletes in the back of a group may need to accelerate more in order to stay in the group, leading to a more variable power output. A more variable power output in cycling increases fatigue [@etxebarria2019; @theurel2008] and may ultimately lead to slower running times [@walsh2019]. Thus the positioning within a bike group may influence the power output and overall triathlon race results in a way that is not displayed in split times.
+
+Previous studies analysed power output in short distance triathlon cycling across different races or different bike groups within a race [@bernard2009; @etxebarria2014]. No research has yet quantified different power demands within a single bike group during a race. Moreover, there is no previous research on how the positioning within a bike group influences the power demand during draft legal triathlon races.
+
+In this study we analyzed positioning and power data of riders in the front group of a sprint triathlon world championship. Our results can help coaches and athletes to chose appropriate tactical strategies during the cycling segment of elite triathlon races.
+
+# Methods
+
+We analyzed data from the 2020 male sprint distance triathlon World Championship in Hamburg. Due to the Covid-19 pandemic, the world championship title was awarded in a single race instead of a race series. We choose to analyse this particular race, as it featured a medium size front group, with television footage of the group being available for most of the race duration. The bike course consisted of six laps of 3.1 km, which included two turning points and two 90 degree corners each.
+
+We retrieved power data from 5 out of 8 riders of the race's front group from public training platforms or as raw data via personal communication. All five athletes provided informed consent to the anonymized analysis of their data. One athlete did not measure power during the race and two athletes did not respond to our requests. All athletes of the front group were elite athletes regularly starting at the highest competition level in sprint and short distance triathlon*.* We cut and synchronized individual power data based on official race timing and GPS data.
+
+We obtained position data from public television footage of the race. For the four turns in each lap we determined the position of each athlete inside the bike group. When the position was unclear, the data were excluded from further analysis.
+
+Descriptive power data is presented as average power (including zero values), normalized power [@coggan], time over 500W and 700W and number of peaks over 500W and 700W (where a peak was defined as a consecutive time series of power values exceeding the given threshold). We created power profiles for each rider by calculating the maximal effort for a consecutive duration for durations ranging from 1 to 1200 seconds. We plotted the distribution of power data for each athlete using Gaussian kernel density estimation.
+
+We investigated the influence of positioning on power output before and after turns. According to the preregistration, we used four outcome variables: the peak power (PPO) of the acceleration after the turn, the mean power for 10 and 20 seconds of the acceleration (MPO10, MPO20) and the mean power during the 20 seconds preceding the turn (MPO20prior). We defined the start of each acceleration by a rider individually as the first increase in power output exceeding 100W.
+
+To investigate the relationship between positioning and power output before and after turns we ran a Bayesian hierarchical model with random slopes and intercepts for each outcome variable. The exact models in formula notation are available in the [supplements](https://github.com/smnnlt/trihamburg/tree/main/scripts/output/05-bayesian.html#appendix-model-formula). We utilized weakly informative prior and performed MCMC diagnostics by calculating Rhat and Neff values and by inspecting trace plots, rank histograms, and posterior draws density plots [@gabry2019]. We interpret the main position effect and its 95% credible interval. We additionally calculated overall and individual posterior mean predictions.
+
+We conducted the full data analysis in R Version 4.2.0. The Bayesian models were fit using Stan Version 2.21.0 via the rstanarm package Version 2.21.3 [@goodrich2020]. This observational study was preregistered on [OSF]((https://osf.io/rdb64/)) and approved by the local ethics committee (196/2021). All data and code is available at [GitHub](https://github.com/smnnlt/trihamburg).
+
+# Results
+
+The analyzed data shows highly fluctuating power demands during the race (see @tbl-desc). Athletes had to deal with around around two dozen peaks over 700W, summing up to a total time of 1-2 minutes over this threshold. Individual differences in the power demands also become apparent by comparing the individual power distributions and profiles (see @fig-power). Most notably, while being part of the same bike group, the athletes spent a considerably different amount of time at high power outputs.
+
+```{r}
+#| echo: false
+#| label: tbl-desc
+#| tbl-cap: "Descriptive data for the power output of the five athletes."
+
+load("../../data/temp/table1.Rda")
+
+# Special treatment of athlete C, who has missing data values.
+# See table caption for more details
+tab1$athlete <- as.character(tab1$athlete)
+tab1$athlete[3] <- "*C"
+tab1$t500[3] <- tab1$t500[3] * (6/5)
+tab1$t700[3] <- tab1$t700[3] * (6/5)
+tab1$n500[3] <- tab1$n500[3] * (6/5)
+tab1$n700[3] <- tab1$n700[3] * (6/5)
+
+tab1[-1] <- round(tab1[, -1])
+tab1 <- tab1[, -3]
+
+kableExtra::kbl(
+  tab1,
+  col.names = c("Athlete", "mean", "sd", "NP", "max", "t500", "t700", "p500", "p700"),
+  align = "r",
+  booktabs = TRUE
+) |>
+  kableExtra::footnote(
+  general = c("*Power data for athlete C is missing for the first of six laps. We","extrapolated the time and peaks over 500W/700W by multiplying", "the recorded data with (6/5).")
+)
+
+```
+
+```{r}
+#| echo: false
+#| label: fig-power
+#| fig-cap: "Power profile and power distribution for the five athletes."
+#| out-width: '90%'
+
+knitr::include_graphics("../../plots/power.png")
+
+```
+
+The position data shows frequent changes in positions inside the bike group (see @fig-positions). The riders appear to have utilized different tactical approaches regarding positioning, with some athletes riding in the front positions for most of the time, while others predominantly rode in the back of the group or fully rotated through all positions. The position at turns was associated with a higher PPO (+24.2W [4.8; 36.7]; mean [95%CI]), a higher MPO10 (+19.3W [10.5; 27.1]) and a higher MPO20 (+6.3W [-1.4; 13.6]) (see @fig-turnpower). Conversely the position was associated with a lower power output at MPO20prior (-13.4W [-20.8; -4.99]).
+
+```{r}
+#| echo: false
+#| label: fig-positions
+#| fig-cap: "Positioning in the front group assessed at each of the four turns of each lap. Athletes employ different strategies in regard of positioning in the bike group. For the first lap, the group consisted of more than eight athletes."
+#| out-width: '90%'
+
+knitr::include_graphics("../../plots/positions.png")
+
+```
+
+```{r}
+#| echo: false
+#| label: fig-turnpower
+#| fig-cap: "Power outputs before and after turns in relation to the positioning within the group. A position further in the back of the group is associated with larger peak and mean power outputs in the following acceleration. Dashed lines show individual posterior mean predictions. The black solid lines display overall posterior mean predictions, with the 95% confidence interval shaded in grey. A single data point for an athlete being at position 9 during the first corner of the race is available and was included in the analysis, but is not displayed."
+#| out-width: '90%'
+
+knitr::include_graphics("../../plots/turnpower.png")
+
+```
+
+# Discussion
+
+The aim of our study was to analyse power demands within a bike group in sprint distance triathlon and investigate its relationship with positioning in the group.
+
+The investigated race required the athletes to proliferate highly varying power outputs (see @fig-power). The analysed front group athletes had a considerably higher mean power output (350±13W) than previously reported values reported in male elite Olympic distance triathlon (252±33W and 265±19W, [@bernard2009; @etxebarria2014]. Moreover, the athletes had more and higher peaks of power output than previously reported [@etxebarria2014]. The short race distance, the tactical situation of one medium size front group and a race course with many turns may have all contributed to the high-intensity character of the cycling. The data clearly demonstrates, that cycling in modern draft legal triathlon races is much more than just a "smooth transition towards running" [@piacentini2019].
+
+The power output distribution of the analyzed race varied between athletes, despite being part of the same group (see @tbl-desc, @fig-power). We expect the different positioning strategies inside the bike group (see @fig-positions) to be the main factor for the varying power demands. Athletes in the front of the group have a lower peak and mean power in the following acceleration (see @fig-turnpower). The observed effect of position on peak is considerably large (+24.2W [4.8; 36.7]), as it suggests, that with each position further behind, an athlete has an PPO higher by 24W. Accordingly, riding on the fifth position instead of the front at a turn, will require an 100W higher acceleration peak on the mean level. The effect is diminishes when considering mean power values over longer time frames after the accelerations (see @fig-turnpower, Panel B and C). While a position in the back has the positive effect of a reduced power output prior to the turn (MPO20prior -13.4W [-20.8; -4.99]), it should be noted that these power outputs are generally in a low to medium intensity range (see @fig-turnpower, Panel D). Accordingly the differences in power output before a turn will not have the same physiological relevance as the differences after a turn. With regard to our investigated power data, the benefits of riding turns at the front of the group outweigh its drawbacks.
+
+Variable power output during cycling increases fatigue [@theurel2008] and may have a negative impact on subsequent running performance [@walsh2019]. Therefore, choosing appropriate tactical approaches during cycling may effect overall triathlon performance. To investigate this effect the field, researchers should collect larger samples of power and positioning data and correlate it with running performance while controlling for running performance levels.
+
+# Practical Applications
+
+From a theoretical view, athletes should aim to be as far at the front as possible during turns, while gaining as much drafting effect as possible during all other parts of the race course. In most races this strategy will be impossible to execute, as it slows down the bike group and disrupts any efforts of cooperative work. Thus, athletes and coaches should balance the benefits and risks of different positioning strategies, and ultimately choose an appropriate strategy based on the athletes abilities.
+
+Riding predominantly in the back of the group to reduce the amount of medium-to-high intensity sections when taking turns in the front will magnify the number of peaks and time at high-intensity power zones. This strategy may be suitable for athletes mainly participating in short races (e.g. relays, junior races) or athletes with the physiological ability to recover fast from intense burst.
+
+Riding in the front of the group will reduce the intensity of acceleration, but requires more and longer medium-to-high intensity efforts due to the reduced effect of drafting. This strategy may work best for athletes also competing on longer distances with the ability to sustain a high power output over a prolonged time (e.g. a high critical power). Ultimately, athletes considering themselves strong in both continuous and sprint efforts can use the front position to make a race harder. They can deliberately perform hard accelerations after each turn, knowing that the riders behind them have to bring even harder efforts.
+
+# Conclusions
+
+Cycling in modern sprint distance triathlon is characterized by highly variable power demands including high-intensity efforts after each turn. With a front position in the bike group during the turn, athletes can reduce the peak and mean power output of the following acceleration. However, this leads to a reduced drafting effect and increases the mean power output prior to turns. As the distribution of power output may influence running performance, athletes should choose an appropriate positioning strategies based on individual factors, such as experience, performance level, and physiological profile.
+
+# Contributions
+
+Both authors contributed to the conception and design of the research and acquired the data. SN analysed and interpreted the data and wrote the initial draft. OJQ revised the article for important intellectual content. Both authors approved the final version of the manuscript to be published.
+
+# Acknowledgements
+
+We thank the athletes for providing their data and participating in the research.
+
+# Funding Information
+
+No funding was received.
+
+# Data and Supplementary Material Accessibility
+
+All data and code is available at <https://github.com/smnnlt/trihamburg>.
