@@ -4,7 +4,6 @@ format:
   html:
     self-contained: true
     toc: true
-output-file: "./output/01-importcleaning.html"
 ---
 
 Script #01 for the project: "Relationship between tactical decisions and power demands during cycling in a male elite sprint triathlon world championship"

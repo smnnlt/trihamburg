@@ -4,7 +4,6 @@ format:
   html:
     self-contained: true
     toc: true
-output-file: "./output/04-positions.html"
 ---
 
 Script #04 for the project: "Relationship between tactical decisions and power demands during cycling in a male elite sprint triathlon world championship"
@@ -113,7 +112,7 @@ ggplot(posdata_long, aes(x = turnid, y = position, colour = athlete)) +
   ) +
   scale_y_continuous(
     name = "Position",
-    breaks = seq(1,9,2),
+    breaks = 1:8,
     limits = c(0.68, 11),
     expand = expansion(c(0,0.01))
   ) +

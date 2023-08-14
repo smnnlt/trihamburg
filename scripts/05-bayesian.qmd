@@ -5,7 +5,6 @@ format:
     self-contained: true
     toc: true
     html-math-method: katex
-output-file: "./output/05-bayesian.html"
 ---
 
 ### Setup
