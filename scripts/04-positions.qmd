@@ -113,7 +113,7 @@ ggplot(posdata_long, aes(x = turnid, y = position, colour = athlete)) +
   ) +
   scale_y_continuous(
     name = "Position",
-    breaks = seq(1,9,2),
+    breaks = 1:8,
     limits = c(0.68, 11),
     expand = expansion(c(0,0.01))
   ) +
