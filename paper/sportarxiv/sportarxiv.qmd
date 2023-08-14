@@ -24,6 +24,7 @@ license-type: ccby # change if neccessary
 # year: 2025 # defaults to current year
 keywords: [drafting; performance; pacing; physiology; race strategies] # optional
 # optional link to Supplementary Material:
+doi: "" # leave empty if no DOI is available
 suppl-link: https://github.com/smnnlt/trihamburg
 reference-section-title: References
 printnote: "PREPRINT - NOT PEER REVIEWED" # if post print, include "POSTPRINT" then link to the published article
