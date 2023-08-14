@@ -57,7 +57,7 @@ We investigated the influence of positioning on power output before and after tu
 
 To investigate the relationship between positioning and power output before and after turns we ran a Bayesian hierarchical model with random slopes and intercepts for each outcome variable. The exact models in formula notation are available in the [supplements](https://github.com/smnnlt/trihamburg/tree/main/scripts/05-bayesian.html#appendix-model-formula). We utilized weakly informative priors and performed Markov chain Monte Carlo diagnostics by calculating Rhat and Neff values and by inspecting trace plots, rank histograms, and density plots of posterior draws [@gabry2019]. We interpreted the main effect of position and its 95% (equal-tailed) credible interval. We additionally calculated overall and individual posterior mean predictions.
 
-We conducted the full data analysis in R Version 4.2.0. The Bayesian models were fitted using Stan Version 2.21.0 via the rstanarm package Version 2.21.3 [@goodrich2020]. This observational study was preregistered on [OSF](https://osf.io/rdb64/) and approved by the local ethics committee (196/2021). All data and code are available at [GitHub](https://github.com/smnnlt/trihamburg).
+We conducted the full data analysis in R Version 4.2.0. The Bayesian models were fitted using Stan Version 2.21.0 via the rstanarm package Version 2.21.3 [@goodrich2020]. This observational study was preregistered on [OSF](https://osf.io/v4dg5) and approved by the local ethics committee (196/2021). All data and code are available at [GitHub](https://github.com/smnnlt/trihamburg).
 
 # Results
 
