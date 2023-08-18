@@ -1,6 +1,6 @@
 # Positioning and Power Demands During Cycling in a Sprint Triathlon World Championship
 
-We analyzed power data from athletes in the front bike group of the 2020 sprint triathlon World Championship. Read our preprint on [SportRxiv]() and the  preregistration on the [OSF](https://osf.io/v4dg5).
+We analyzed power data from athletes in the front bike group of the 2020 sprint triathlon World Championship. Read our preprint on [SportRxiv](https://doi.org/10.51224/SRXIV.317) and the  preregistration on the [OSF](https://osf.io/v4dg5).
 
 ## Repository
 
