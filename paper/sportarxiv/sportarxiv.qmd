@@ -24,7 +24,7 @@ license-type: ccby # change if neccessary
 # year: 2025 # defaults to current year
 keywords: [drafting; performance; pacing; physiology; race strategies] # optional
 # optional link to Supplementary Material:
-doi: "" # leave empty if no DOI is available
+doi: "DOI: 10.51224/SRXIV.317" # leave empty if no DOI is available
 suppl-link: https://github.com/smnnlt/trihamburg
 reference-section-title: References
 printnote: "PREPRINT - NOT PEER REVIEWED" # if post print, include "POSTPRINT" then link to the published article
@@ -90,7 +90,7 @@ kableExtra::kbl(
   booktabs = TRUE
 ) |>
   kableExtra::footnote(
-  general = c("mean: Average Power, sd: Standard deviation; NP: Normalized Power;", "max: Maximum Power", " *Power data for athlete C is missing for the first of six laps. We","extrapolated the time and peaks over 500 W/700 W by multiplying", "the recorded data with the factor 1.2."),
+  general = c("mean: average power, sd: standard deviation; NP: normalized power;", "max: maximum power", " *Power data for athlete C was missing for the first of six laps. We","extrapolated the time and peaks over 500 W/700 W by multiplying", "the recorded data with the factor 1.2"),
   general_title = "",
   fixed_small_size = TRUE
 ) |>
@@ -136,7 +136,7 @@ knitr::include_graphics("../../plots/turnpower.png")
 
 The aim of our study was to analyze power demands within a bike group in sprint distance triathlon and investigate their relationship with positioning behavior in the group.
 
-The investigated race required the athletes to proliferate highly varying power outputs (see @fig-power). The analyzed front group athletes had a considerably higher mean power output (350±13 W) than previously reported values in male elite Olympic distance triathlon (252±33 W and 265±19 W, [@bernard2009; @etxebarria2014]. Moreover, the athletes had more and higher peaks of power output than reported elsewhere [@etxebarria2014]. The short race distance, the tactical situation of one medium-sized front group, and a racecourse with many turns may have all contributed to the high-intensity character of the cycling segment. Our data demonstrate that cycling in modern draft legal triathlon races is much more than just a "smooth transition towards running" [@piacentini2019].
+The investigated race required the athletes to proliferate highly varying power outputs (see @fig-power). The analyzed front group athletes had a considerably higher mean power output (350±13 W) than previously reported values in male elite Olympic distance triathlon (252±33 W and 265±19 W, [@bernard2009; @etxebarria2014]). Moreover, the athletes had more and higher peaks of power output than reported elsewhere [@etxebarria2014]. The short race distance, the tactical situation of one medium-sized front group, and a racecourse with many turns may have all contributed to the high-intensity character of the cycling segment. Our data demonstrate that cycling in modern draft legal triathlon races is much more than just a "smooth transition towards running" [@piacentini2019].
 
 The power output distribution of the analyzed race varied between athletes, despite them being part of the same group (see @tbl-desc, @fig-power). We expect the different positioning strategies inside the bike group (see @fig-positions) to be the main factor for the varying power demands. Athletes in the front of the group at a turn have a lower peak and mean power in the following acceleration (see @fig-turnpower). The observed effect of position on peak power is large (+24.2 W [4.8; 36.7]), as it suggests, that with each position placed further behind, an athlete has an PPO higher by 24 W. Accordingly, riding on the fifth position instead of the front at a turn, will require an 100 W higher acceleration peak on the mean level. The size of the effect decreases when considering mean power values over longer time frames (see @fig-turnpower, Panel B and C). While a position in the back of a group is associated with a reduced power output before a turn (MPO20prior -13.4 W [-20.8; -4.99]), it should be noted that these power outputs are generally in a low to medium intensity range (see @fig-turnpower, Panel D). Accordingly, the differences in power output before a turn will not have the same physiological relevance as the differences after a turn. Our investigated power data suggest that the benefits of riding turns at the front of the group outweigh the drawbacks.
 
